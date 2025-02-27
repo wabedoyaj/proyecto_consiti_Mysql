@@ -3,12 +3,16 @@ package com.tutorial.crud.service;
 import com.tutorial.crud.entity.Producto;
 import com.tutorial.crud.repository.ProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+@Service
+@Transactional
 public class ProductoService {
-
     @Autowired
     private  ProductoRepository productoRepository;
 
@@ -31,6 +35,6 @@ public class ProductoService {
         return productoRepository.existsById(id);
     }
     public boolean existByNombre(String nombre) {
-        return productoRepository.existByNombre(nombre);
+        return productoRepository.existsByNombre(nombre);
     }
 }

@@ -26,7 +26,7 @@ public class JwtProvider {
     private String secret;
 
     @Value("${jwt.expiration}")
-    private String expiration;
+    private int expiration;
     /* *
     * @param authentication
     *@return un token que contiene el username, los roles, fecha de expiracion y una firma
@@ -40,7 +40,7 @@ public class JwtProvider {
                 .setSubject(usuarioPrincipal.getUsername())
                 .claim("roles",roles)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(new Date().getTime()+expiration))
+                .setExpiration(new Date(new Date().getTime() + expiration))
                 .signWith(SignatureAlgorithm.HS512, secret.getBytes())
                 .compact();
     }
@@ -80,21 +80,38 @@ public class JwtProvider {
      * @throws ParseException
      */
     public String refreshToken(JwtDto jwtDto) throws ParseException {
-        try{
-            Jwts.parser().setSigningKey(secret.getBytes()).parseClaimsJws(jwtDto.getToken());
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secret.getBytes())
+                    .parseClaimsJws(jwtDto.getToken())
+                    .getBody();
+
+            String nombreUsuario = claims.getSubject();
+            List<String> roles = (List<String>) claims.get("roles");
+
+            return Jwts.builder()
+                    .setSubject(nombreUsuario)
+                    .claim("roles", roles)
+                    .setIssuedAt(new Date())
+                    .setExpiration(new Date(new Date().getTime() + expiration)) // Nueva expiración
+                    .signWith(SignatureAlgorithm.HS512, secret.getBytes())
+                    .compact();
+
         } catch (ExpiredJwtException e) {
             JWT jwt = JWTParser.parse(jwtDto.getToken());
             JWTClaimsSet claims = jwt.getJWTClaimsSet();
             String nombreUsuario = claims.getSubject();
-            List<String>roles = (List<String>)claims.getClaim("roles");
+            List<String> roles = (List<String>) claims.getClaim("roles");
+
             return Jwts.builder()
                     .setSubject(nombreUsuario)
-                    .claim("roles",roles)
+                    .claim("roles", roles)
                     .setIssuedAt(new Date())
-                    .setExpiration(new Date(new Date().getTime()+expiration))
+                    .setExpiration(new Date(new Date().getTime() + expiration)) // Nueva expiración
                     .signWith(SignatureAlgorithm.HS512, secret.getBytes())
                     .compact();
         }
-        return  null;
     }
+
+
 }
